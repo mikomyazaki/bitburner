@@ -1,0 +1,12 @@
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_grow.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_hack.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_weaken.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/master_controller.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/opened_servers.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/print_servers_by_hck_lvl.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/root_all_servers.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/root_server.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/scan.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/server.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/threads.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/tools.js
