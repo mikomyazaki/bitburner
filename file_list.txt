@@ -5,6 +5,7 @@ https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/master_cont
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/opened_servers.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/print_servers_by_hck_lvl.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scripts/root_all_servers.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/update_scripts.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/root_server.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/scan.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/utils/server.js
