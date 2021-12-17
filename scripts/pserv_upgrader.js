@@ -37,7 +37,7 @@ export async function main(ns) {
             
             for (let j = 0; j < pservs[i].ps; j++) {
                 let script = pservs[i].ps.filename;
-                await ns.exec(script, pserv, Math.floor(ns.getServerMaxRam(pserv) / ns.getScriptRam(script), ...pservs[i].ps.args));
+                await ns.exec(script, pserv, Math.floor(ns.getServerMaxRam(pserv) / ns.getScriptRam(script)), ...pservs[i].ps.args);
             }
         }
     }
