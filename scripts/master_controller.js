@@ -2,7 +2,7 @@ import {root_all_servers} from '/utils/root_server.js';
 import {list_open_servers, servers_by_hacking_level} from '/utils/scan.js';
 import {weaken_server, grow_server, hack_server} from '/utils/server.js';
 
-async function initialize_server(server) {
+export async function initialize_server(ns, server) {
     const files = ["minimal_hack.js",
 "minimal_weaken.js",
 "minimal_grow.js"];
@@ -26,7 +26,7 @@ export async function main(ns) {
     let avail_servers = list_open_servers(ns);
     // Copy over necessary scripts
     for (const server of avail_servers) {
-        await initialize_server(server);
+        await initialize_server(ns, server);
     }
 
     const server_list_by_hacking_level = servers_by_hacking_level(ns);
