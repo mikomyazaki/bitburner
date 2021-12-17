@@ -11,7 +11,7 @@ export async function scan_pservs(ns) {
 
 async function getAffordableUpgradeLevel(ns, server, current_money) {
     let current_ram = ns.getServer(server).maxRam;
-    let next_ram = function ram_limit(current_ram) { (ns.getPurchasedServerCost(current_ram) > current_money) ? (return current_ram / 2 : ram_limit(current_ram * 2)) }
+    let next_ram = Math.floor(Math.log2(current_money % 55000));
 
     return next_ram > current_ram ? next_ram : null
 }
