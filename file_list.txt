@@ -6,9 +6,4 @@ https://raw.githubusercontent.com/mikomyazaki/bitburner/main/opened_servers.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/print_servers_by_hck_lvl.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/pserv_upgrader.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/root_all_servers.js
-https://raw.githubusercontent.com/mikomyazaki/bitburner/main/root_server.js
-https://raw.githubusercontent.com/mikomyazaki/bitburner/main/scan.js
-https://raw.githubusercontent.com/mikomyazaki/bitburner/main/server.js
-https://raw.githubusercontent.com/mikomyazaki/bitburner/main/threads.js
-https://raw.githubusercontent.com/mikomyazaki/bitburner/main/tools.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/update_scripts.js

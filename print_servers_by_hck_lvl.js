@@ -1,4 +1,4 @@
-import {servers_by_hacking_level} from '/utils/scan.js';
+import {servers_by_hacking_level} from 'tools.js';
 
 /** @param {NS} ns **/
 export async function main(ns) {

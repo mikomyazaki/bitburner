@@ -1,4 +1,4 @@
-import {root_all_servers} from '/utils/root_server.js';
+import {root_all_servers} from 'tools.js';
 
 /** @param {NS} ns **/
 export async function main(ns) {

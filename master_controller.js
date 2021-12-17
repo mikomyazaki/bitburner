@@ -1,6 +1,6 @@
-import {root_all_servers} from '/utils/root_server.js';
-import {list_open_servers, servers_by_hacking_level} from '/utils/scan.js';
-import {weaken_server, grow_server, hack_server} from '/utils/server.js';
+import {root_all_servers} from 'tools.js';
+import {list_open_servers, servers_by_hacking_level} from 'tools.js';
+import {weaken_server, grow_server, hack_server} from 'tools.js';
 
 export async function initialize_server(ns, server) {
     const files = ["minimal_hack.js",

@@ -1,4 +1,4 @@
-import {list_servers} from '/utils/scan.js';
+import {list_servers} from 'tools.js';
 
 /** @param {NS} ns **/
 export async function main(ns) {
