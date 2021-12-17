@@ -31,6 +31,8 @@ export async function main(ns) {
             await ns.deleteServer(pserv);
             await ns.purchaseServer(pserv, upgrade);
 
+            tprint("Upgrading server " + pserv + " to " + upgrade " for a cost of " + 55000*2**upgrade + ".");
+
             await initialize_server(ns, pserv);
 
             for (let j = 0; j < pservs[i].ps; j++) {
