@@ -6,6 +6,7 @@ https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_hack.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_weaken.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/opened_servers.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/print_servers_by_hck_lvl.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/print_servers.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/pserv_upgrader.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/root_all_servers.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/spread_hack.js
