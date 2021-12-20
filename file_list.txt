@@ -1,3 +1,5 @@
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/basic_hack.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/farm_exp.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/master_controller.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_grow.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_hack.js

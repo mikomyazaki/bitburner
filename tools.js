@@ -33,17 +33,19 @@ export function run_port_hack_tools(ns, server) {
 }
 
 export function rootServer(ns, server) {
-    if (num_port_hack_tools(ns) <= ns.getServerNumPorts(server)) {
+    if (num_port_hack_tools(ns) >= ns.getServerNumPortsRequired(server)) {
         if (!ns.hasRootAccess(server)) {
-             tprintf("Gained access to server " + server + ".");
+            ns.tprintf("Gained access to server " + server + ".");
             run_port_hack_tools(ns, server);
             ns.nuke(server);
-        }
+            return true;
+        } 
     }
+    return false;
 }
 
-export async function getAllServers(ns) {
-    let serverList = ["home"];
+export function getAllServers(ns) {
+    var serverList = ["home"];
     for (let i = 0; i < serverList.length; i++) {
         for (let newServer of ns.scan(serverList[i])) {
             if (!serverList.includes(newServer)) {
@@ -51,12 +53,16 @@ export async function getAllServers(ns) {
             }
         }
     }
-
+  
     return serverList;
 }
 
 export async function rootAllServers(ns) {
-    for (let server in ns.getAllServers(ns)) {
-        rootServer(ns, server);
+    let serverList = getAllServers(ns);
+    let rooted_servers = 0;
+    for (let i = 0; i < serverList.length; i++) {
+        if(rootServer(ns, serverList[i])) rooted_servers++;;
     }
+
+    ns.tprintf("Rooted: " + rooted_servers + " new servers. ")
 }

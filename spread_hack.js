@@ -1,48 +1,58 @@
+import { getAllServers } from 'tools.js';
+
 /** @param {NS} ns **/
 export async function main(ns) {
-	var target = "n00dles";
+	let target = "n00dles";
+	let serverList = getAllServers(ns);
+	ns.tprint(serverList.length);
+	serverList = serverList.filter(x => x == 'home');
 
-    await ns.scp(["minimal_grow.js", "minimal_hack.js", "minimal_weaken.js"], ns.getHostname(), target);
+	await ns.scp(["minimal_grow.js", "minimal_hack.js", "minimal_weaken.js"], ns.getHostname(), target);
 
-	var script_name = ns.getScriptName();
-	var script_threads = 365;
-    ns.tprint("Script running with " + script_threads + " threads.");
+	let max_batches = serverList.length;
+	while (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)) {
+		for (let server in serverList) {
+			let weakenMem = ns.getScriptRam("minimal_weaken.js", "home");
+			let freeRAM = ns.getServerMaxRam(server) - ns.getServerUsedRam(server);
+			ns.exec("minimal_weaken.js", server, Math.floor(freeRam / weakenMem), target);
 
-	var min_sec = ns.getServerMinSecurityLevel(target);
-    ns.tprint("Server has " + (100*ns.getServerSecurityLevel(target)/min_sec) + "% security level.");
-
-	while (ns.getServerSecurityLevel(target) > min_sec) {
-		var sec_diff = ns.getServerSecurityLevel(target) - ns.getServerMinSecurityLevel(target);
-		var threads_req = Math.min(script_threads, Math.floor(sec_diff / ns.weakenAnalyze(1, target)));
-
-		await ns.weaken(target);
+			await sleep(ns.getWeakenTime(target) + 1000);
+		}
 	}
 
-	var weaken_time = ns.getWeakenTime(target);
-	var grow_time = ns.getGrowTime(target);
-	var hack_time = ns.getHackTime(target);
-	var hack_perc = ns.hackAnalyze(target);
-	var grow_perc = ns.growthAnalyze(target, 1+hack_perc);
+	let cycle_duration = Math.max(ns.getWeakenTime(target), ns.getHackTime(target), ns.getGrowTime(target));
+	let cycle_delay = cycle_duration / max_batches;
+	let weakenMem = ns.getScriptRam("minimal_weaken.js", "home");
+	let growMem = ns.getScriptRam("minimal_grow.js", "home");
+	let hackMem = ns.getScriptRam("minimal_hack.js", "home");
 
-	var weaken_num = 2;
-	var hack_num = 11;
-	var grow_num = 12;
+	let hackSecDelta = ns.hackAnalyzeSecurity(1);
+	let hackCashDelta = ns.hackAnalyze(target);
+	let growSecDelta = ns.growthAnalyzeSecurity(1);
+	let growCashDelta = ns.growthAnalyze(target, hackCashDelta, 1);
+	let weakenSecDelta = ns.weakenAnalyze(1);
 
-	var batch_count = Math.floor(script_threads / (weaken_num + hack_num + grow_num));
-	var batch_delay = Math.max(weaken_time, grow_time, hack_time);
+	let weakenDelay = cycleDuration - ns.getWeakenTime(target);
+	let growDelay = cycleDuration - ns.getGrowTime(target);
+	let hackDelay = cycleDuration - ns.getHackTime(target);
 
-	var batch_rate = batch_delay / batch_count;
-
-	var weaken_latency = batch_delay - weaken_time;
-	var hack_latency = batch_delay - hack_time;
-	var grow_latency = batch_delay - grow_time;
+	// Thread ratios
+	let growHackRatio = Math.ceil(growCashDelta / hackCashDelta);
+	let weakenGrowRatio = Math.Ceil(weakenSecDelta / (growHackRatio * growSecDelta + hackSecDelta));
+	let hgwMem = weakenGrowRatio * (growHackRatio * (hackMem) + growMem) + weakenMem;
 
 	while (true) {
-        ns.tprint("Loop... executing again in " + batch_rate)
-		await ns.exec("minimal_weaken.js", target, weaken_num);
-		await ns.exec("minimal_grow.js", target, grow_num);
-		await ns.exec("minimal_hack.js", target, hack_num);
+		for (let server in serverList) {
+			ns.killall(server);
+			let freeRAM = ns.getServerMaxRam(server) - ns.getServerUsedRam(server);
+			let hwgCount = Math.floor(freeRam / hgwMem);
 
-		ns.sleep(batch_rate);
+			ns.exec("minimal_weaken.js", server, hwgCount, target, weakenDelay);
+			ns.exec("minimal_grow.js", server, hwgCount * weakenGrowRatio, growDelay);
+			ns.exec("minimal_hack.js", server, hwgCount * weakenGrowRatio * growHackRatio);
+
+			await ns.sleep(cycle_delay);
+		}
+		await ns.sleep(10000);
 	}
 }
