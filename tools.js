@@ -66,3 +66,17 @@ export async function rootAllServers(ns) {
 
     ns.tprintf("Rooted: " + rooted_servers + " new servers. ")
 }
+
+export function availableRAM(ns, server) {
+    let ram_used = 0
+    let ps = ns.ps(server)
+
+    for (let i = 0; i < ps.length; i++) {
+        ram_used += ns.getScriptRam(ps[i].filename, server) * ps[i].threads;
+    }
+    return ns.getServerMaxRam(server) - ram_used;
+}
+
+export function availableThreads(ns, server, script) {
+    return Math.floor(availableRAM(ns, server) / ns.getScriptRam(script));
+}

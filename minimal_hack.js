@@ -1,7 +1,6 @@
 export async function main(ns) {
-    const args = ns.flags([["help", false]]);
-    const target_server = args._[0];
-    const delay = args._[1]
+    const target_server = ns.args[0];
+    const delay = ns.args[1]
 
     await ns.sleep(delay) {
         ns.hack(target_server);

@@ -14,9 +14,9 @@ export async function main(ns) {
         } else if (ns.getServerMoneyAvailable(hostname) < ns.getServerMaxMoney(hostname)) {
             await ns.grow(hostname);
         } else {
-            ns.tprintf(ns.hackAnalyze(hostname).toString())
             let hackThreads = Math.floor(0.25/ns.hackAnalyze(hostname));
-            ns.tprintf("Hacking server: " + hostname + " with " + hackThreads + " threads.");
+            let scriptThreads = ns.ps(ns.getHostname()).threads;
+            hackThreads = Math.min(scriptThreads, hackThreads);
             await ns.hack(hostname, { threads : hackThreads });
         }
     }
