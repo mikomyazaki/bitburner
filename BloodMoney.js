@@ -6,12 +6,20 @@ const scripts = {
     hacker: "minimal_hack.js"
 };
 
-class serverInfo {
+class myServerInfo {
     pendingJobs = []
     constructor(hostname, ram, rooted) {
         this.hostname = hostname;
         this.ram = ram;
         this.rooted = rooted;
+    }
+}
+
+class job {
+    constructor(type, target, time) {
+        this.type = type;
+        this.target = target;
+        this.time = time;
     }
 }
 
@@ -33,8 +41,9 @@ export async function main(ns) {
 
     prepareServer(ns, target);
     
-    const ratios = calculateThreadRatios(ns, target);
-
+    const ratios = calculateThreadRatios(ns, target); // ratio of HGW threads
+    const cycleTime = Math.max(ns.getWeakenTime(target), ns.getGrowTime(target), ns.getHackTime(target));  // time for one cycle to complete
+    const minCycleSeparation = 1000; // minimum time between batches
 }
 
 function prepareServer(ns, target) {
@@ -53,9 +62,18 @@ export function calculateThreadRatios(ns, target) {
     const growSecDelta = 0.004;
     const hackSecDelta = 0.002;
 
+    // grow-hack ratio
     const hackCashDelta = ns.hackAnalyze(target) * ns.hackAnalyzeChance(target);
     const growPerHack = Math.ceil(ns.growthAnalyze(target, 1/(1-hackCashDelta)));
 
-    ns.tprint("HackCashDelta : " + hackCashDelta);
-    ns.tprint("growPerHack thread: " + target);
+    // weaken-grow ratio
+    let weakenPerHack = Math.ceil(1 / Math.abs((hackSecDelta + growPerHack * growSecDelta) / weakenSecDelta));
+
+    const ratios = {
+        growThreads: growPerHack,
+        hackThreads: 1,
+        weakenThreads: weakenPerHack
+    }
+
+    ns.tprintf("Grow: " + ratios.growThreads + " Hack: " + ratios.hackThreads + " Weaken: " + ratios.weakenThreads);
 }

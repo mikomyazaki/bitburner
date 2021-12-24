@@ -7,7 +7,6 @@ export async function main(ns) {
 
 	while (true) {
 		for (const server of getAllServers(ns)) {
-			if (server == "home") continue;
 			await ns.scp(script, ns.getHostname(), server);
 			let avail_threads = availableThreads(ns, server, script);
 
