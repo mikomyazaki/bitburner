@@ -22,14 +22,14 @@ export async function main(ns) {
 
     // Populate server objects
     for (let server of getAllServers()) {
-        let s = ns.getServer(server)
+        let s = ns.getServer(server);
         serverList.push(
-            new serverInfo(s.hostname, s.maxRam, s.hasAdminRights);
-        )
+            new serverInfo(s.hostname, s.maxRam, s.hasAdminRights)
+        );
     }
 
     ns.tprintf("Generated list of " + serverList.length + " servers.");
 
-    
+
 
 }
