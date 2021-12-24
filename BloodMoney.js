@@ -60,6 +60,8 @@ export async function main(ns) {
     const memWeakener = ns.getScriptRam(scripts.weakener);
     const jobOffset = 10; // offset between individual hack/grow/weakens within a batch
     let currTime = Date.now()
+
+    ns.tprint("Running hack script -- Max concurrent jobs - " + (3 * cycleTime / minCycleSeparation));
     
     while (true) {
         await ns.sleep(Math.max(Date.now() - currTime + minCycleSeparation, 0));
@@ -68,7 +70,7 @@ export async function main(ns) {
         let batchRAMCost = ratios.hackThreads * memHacker + ratios.growThreads * memGrower + ratios.weakenThreads * memWeakener;
         let workerServer = findOpenServer(ns, serverList, batchRAMCost);
 
-        if (workerServer) {
+        if (workerServer) {    disableLog(ns.sleep);
                 ns.tprintf("Starting job batch on " + workerServer + ".")
                 let growStartAt = currTime + cycleTime - growTime;
                 ns.exec(scripts.grower, workerServer, ratios.growThreads, target, growStartAt)
@@ -77,7 +79,6 @@ export async function main(ns) {
                 let weakenStartAt = currTime + cycleTime - weakenTime + 2*jobOffset;
                 ns.exec(scripts.weakener, workerServer, ratios.weakenThreads, target, weakenStartAt)
 
-                ns.tprintf("Starting at -- Grow : " + (growStartAt - currTime ) + " Hack : " + (hackStartAt - currTime) + " Weaken: " + (weakenStartAt - currTime ));
             } else {
             ns.tprintf("No available worker found!")
         }
