@@ -1,4 +1,4 @@
-import { getAllServers, rootAllServers } from 'tools.js'
+import { getAllServers, rootAllServers, availableRAM } from 'tools.js'
 
 const scripts = {
     weakener: "minimal_weaken.js",
@@ -7,7 +7,7 @@ const scripts = {
 };
 
 class myServerInfo {
-    pendingJobs = []
+    activeJobs = []
     constructor(hostname, ram, rooted) {
         this.hostname = hostname;
         this.ram = ram;
@@ -16,10 +16,18 @@ class myServerInfo {
 }
 
 class job {
-    constructor(type, target, time) {
+    constructor(type, target, startAt) {
         this.type = type;
         this.target = target;
-        this.time = time;
+        this.startAt = startAt;
+    }
+}
+
+class ratio {
+    constructor(growThreads, hackThreads, weakenThreads) {
+        this.growThreads = growThreads,
+        this.hackThreads = hackThreads,
+        this.weakenThreads = weakenThreads
     }
 }
 
@@ -43,7 +51,32 @@ export async function main(ns) {
     
     const ratios = calculateThreadRatios(ns, target); // ratio of HGW threads
     const cycleTime = Math.max(ns.getWeakenTime(target), ns.getGrowTime(target), ns.getHackTime(target));  // time for one cycle to complete
+    const growTime = ns.getGrowTime(target);
+    const hackTime = ns.getHackTime(target);
+    const weakenTime = ns.getWeakenTime(target);
     const minCycleSeparation = 1000; // minimum time between batches
+    const memHacker = ns.getScriptRam(scripts.hacker);
+    const memGrower = ns.getScriptRam(scripts.grower);
+    const memWeakener = ns.getScriptRam(scripts.weakener);
+    const jobOffset = 10; // offset between individual hack/grow/weakens within a batch
+    let currTime = Date.now()
+    
+    while (true) {
+        await ns.sleep(Math.max(Date.now() - currTime + minCycleSeparation, 0));
+
+        currTime = Date.now();
+        let batchRAMCost = ratios.hackThreads * memHacker + ratios.growThreads * memGrower + ratios.weakenThreads * memWeakener;
+        let workerServer = findOpenServer(ns, serverList, batchRAMCost);
+
+        if (workerServer) {
+                ns.tprintf("Starting job batch on " + workerServer + ".")
+                ns.exec(scripts.grower, workerServer, ratios.growThreads, target, currTime + cycleTime - growTime)
+                ns.exec(scripts.hacker, workerServer, ratios.hackThreads, target, currTime + cycleTime - hackTime + jobOffset)
+                ns.exec(scripts.weakener, workerServer, ratios.weakenThreads, target, currTime + cycleTime - weakenTime + 2*jobOffset)
+            } else {
+            ns.tprintf("No available worker found!")
+        }
+    }
 }
 
 function prepareServer(ns, target) {
@@ -57,7 +90,7 @@ function prepareServer(ns, target) {
     }
 }
 
-export function calculateThreadRatios(ns, target) {
+function calculateThreadRatios(ns, target) {
     const weakenSecDelta = -0.05;
     const growSecDelta = 0.004;
     const hackSecDelta = 0.002;
@@ -69,11 +102,15 @@ export function calculateThreadRatios(ns, target) {
     // weaken-grow ratio
     let weakenPerHack = Math.ceil(1 / Math.abs((hackSecDelta + growPerHack * growSecDelta) / weakenSecDelta));
 
-    const ratios = {
-        growThreads: growPerHack,
-        hackThreads: 1,
-        weakenThreads: weakenPerHack
-    }
+    return new ratio(growPerHack, 1, weakenPerHack);
+}
 
-    ns.tprintf("Grow: " + ratios.growThreads + " Hack: " + ratios.hackThreads + " Weaken: " + ratios.weakenThreads);
+function findOpenServer(ns, serverList, batchRAMCost) {
+    for (let server of serverList) {
+        let hostname = server.hostname;
+        if (availableRAM(ns, hostname) <= batchRAMCost) {
+            return hostname;
+        }
+    }
+    return false;
 }
