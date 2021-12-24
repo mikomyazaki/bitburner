@@ -45,7 +45,7 @@ export function rootServer(ns, server) {
 }
 
 export function getAllServers(ns) {
-    var serverList = ["home"];
+    let serverList = ["home"];
     for (let i = 0; i < serverList.length; i++) {
         for (let newServer of ns.scan(serverList[i])) {
             if (!serverList.includes(newServer)) {

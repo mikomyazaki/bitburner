@@ -17,12 +17,13 @@ class serverInfo {
 
 /** @param {NS} ns **/
 export async function main(ns) {
+    const target = ns.args[0];
     let serverList = [];
     rootAllServers();
 
     // Populate server objects
-    for (let server of getAllServers()) {
-        let s = ns.getServer(server);
+    for (let server of getAllServers(ns)) {
+        let s = ns.getServer(server)
         serverList.push(
             new serverInfo(s.hostname, s.maxRam, s.hasAdminRights)
         );
@@ -30,6 +31,31 @@ export async function main(ns) {
 
     ns.tprintf("Generated list of " + serverList.length + " servers.");
 
+    prepareServer(ns, target);
+    
+    const ratios = calculateThreadRatios(ns, target);
 
+}
 
+function prepareServer(ns, target) {
+    // Prepare the target server
+    while (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target) || ns.getServerMaxMoney(target) != ns.getServerMoneyAvailable(target)) {
+        if (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)) {
+            await ns.weaken(target);
+        } else if (ns.getServerMaxMoney(target) != ns.getServerMoneyAvailable(target)) {
+            await ns.grow(target);
+        }
+    }
+}
+
+export function calculateThreadRatios(ns, target) {
+    const weakenSecDelta = -0.05;
+    const growSecDelta = 0.004;
+    const hackSecDelta = 0.002;
+
+    const hackCashDelta = ns.hackAnalyze(target) * ns.hackAnalyzeChance(target);
+    const growPerHack = Math.ceil(ns.growthAnalyze(target, 1/(1-hackCashDelta)));
+
+    ns.tprint("HackCashDelta : " + hackCashDelta);
+    ns.tprint("growPerHack thread: " + target);
 }
