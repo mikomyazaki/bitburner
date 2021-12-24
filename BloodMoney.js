@@ -15,7 +15,7 @@ class myServerInfo {
     }
 }
 
-class job {
+class myJob {
     constructor(type, target, startAt) {
         this.type = type;
         this.target = target;
@@ -41,13 +41,13 @@ export async function main(ns) {
     for (let server of getAllServers(ns)) {
         let s = ns.getServer(server)
         serverList.push(
-            new serverInfo(s.hostname, s.maxRam, s.hasAdminRights)
+            new myServerInfo(s.hostname, s.maxRam, s.hasAdminRights)
         );
     }
 
     ns.tprintf("Generated list of " + serverList.length + " servers.");
 
-    prepareServer(ns, target);
+    prepServer(ns, target);
     
     const ratios = calculateThreadRatios(ns, target); // ratio of HGW threads
     const cycleTime = Math.max(ns.getWeakenTime(target), ns.getGrowTime(target), ns.getHackTime(target));  // time for one cycle to complete
@@ -70,22 +70,29 @@ export async function main(ns) {
 
         if (workerServer) {
                 ns.tprintf("Starting job batch on " + workerServer + ".")
-                ns.exec(scripts.grower, workerServer, ratios.growThreads, target, currTime + cycleTime - growTime)
-                ns.exec(scripts.hacker, workerServer, ratios.hackThreads, target, currTime + cycleTime - hackTime + jobOffset)
-                ns.exec(scripts.weakener, workerServer, ratios.weakenThreads, target, currTime + cycleTime - weakenTime + 2*jobOffset)
+                let growStartAt = currTime + cycleTime - growTime;
+                ns.exec(scripts.grower, workerServer, ratios.growThreads, target, growStartAt)
+                let hackStartAt = currTime + cycleTime - hackTime + jobOffset;
+                ns.exec(scripts.hacker, workerServer, ratios.hackThreads, target, hackStartAt)
+                let weakenStartAt = currTime + cycleTime - weakenTime + 2*jobOffset;
+                ns.exec(scripts.weakener, workerServer, ratios.weakenThreads, target, weakenStartAt)
+
+                ns.tprintf("Starting at -- Grow : " + (growStartAt - currTime ) + " Hack : " + (hackStartAt - currTime) + " Weaken: " + (weakenStartAt - currTime ));
             } else {
             ns.tprintf("No available worker found!")
         }
     }
 }
 
-function prepareServer(ns, target) {
+async function prepServer(ns, target) {
     // Prepare the target server
-    while (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target) || ns.getServerMaxMoney(target) != ns.getServerMoneyAvailable(target)) {
-        if (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)) {
-            await ns.weaken(target);
-        } else if (ns.getServerMaxMoney(target) != ns.getServerMoneyAvailable(target)) {
-            await ns.grow(target);
+    while (true) {
+        if (ns.getServerSecurityLevel(hostname) > ns.getServerMinSecurityLevel(hostname)) {
+            await ns.weaken(hostname);
+        } else if (ns.getServerMoneyAvailable(hostname) < ns.getServerMaxMoney(hostname)) {
+            await ns.grow(hostname);
+        } else {
+            return;
         }
     }
 }
@@ -97,7 +104,7 @@ function calculateThreadRatios(ns, target) {
 
     // grow-hack ratio
     const hackCashDelta = ns.hackAnalyze(target) * ns.hackAnalyzeChance(target);
-    const growPerHack = Math.ceil(ns.growthAnalyze(target, 1/(1-hackCashDelta)));
+    const growPerHack = Math.ceil(ns.growthAnalyze(target, 1/(1-hackCashDelta)), 1);
 
     // weaken-grow ratio
     let weakenPerHack = Math.ceil(1 / Math.abs((hackSecDelta + growPerHack * growSecDelta) / weakenSecDelta));
@@ -108,7 +115,7 @@ function calculateThreadRatios(ns, target) {
 function findOpenServer(ns, serverList, batchRAMCost) {
     for (let server of serverList) {
         let hostname = server.hostname;
-        if (availableRAM(ns, hostname) <= batchRAMCost) {
+        if (availableRAM(ns, hostname) >= batchRAMCost) {
             return hostname;
         }
     }
