@@ -6,7 +6,6 @@ export async function main(ns) {
 	serverList = serverList.filter(x => x != 'home');
 	
 	for (let server of serverList) {
-		ns.tprint("Killing all on: " + server);
 		ns.killall(server);
 	}
 }
