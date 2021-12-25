@@ -1,5 +1,6 @@
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/basic_hack.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/BloodMoney.js
+https://raw.githubusercontent.com/mikomyazaki/bitburner/main/connect-to-server.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/farm_exp.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/killall.js
 https://raw.githubusercontent.com/mikomyazaki/bitburner/main/minimal_grow.js

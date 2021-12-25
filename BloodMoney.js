@@ -1,4 +1,4 @@
-import { getAllServers, rootAllServers, availableRAM } from 'tools.js'
+import { getAllServers, rootAllServers, availableRAM, availableThreads } from 'tools.js'
 
 const scripts = {
     weakener: "minimal_weaken.js",
@@ -47,21 +47,22 @@ export async function main(ns) {
 
     ns.tprintf("Generated list of " + serverList.length + " servers.");
 
-    prepServer(ns, target);
+    await prepServer(ns, target);
     
     const ratios = calculateThreadRatios(ns, target); // ratio of HGW threads
     const cycleTime = Math.max(ns.getWeakenTime(target), ns.getGrowTime(target), ns.getHackTime(target));  // time for one cycle to complete
     const growTime = ns.getGrowTime(target);
     const hackTime = ns.getHackTime(target);
     const weakenTime = ns.getWeakenTime(target);
-    const minCycleSeparation = 1000; // minimum time between batches
+    const minCycleSeparation = 200; // minimum time between batches
     const memHacker = ns.getScriptRam(scripts.hacker);
     const memGrower = ns.getScriptRam(scripts.grower);
     const memWeakener = ns.getScriptRam(scripts.weakener);
     const jobOffset = 10; // offset between individual hack/grow/weakens within a batch
     let currTime = Date.now()
 
-    ns.tprint("Running hack script -- Max concurrent jobs - " + (3 * cycleTime / minCycleSeparation));
+    let maxBatches = 3 * cycleTime / minCycleSeparation;
+    ns.tprint("Running hack script -- Max concurrent jobs - " + maxBatches);
     
     while (true) {
         await ns.sleep(Math.max(Date.now() - currTime + minCycleSeparation, 0));
@@ -70,8 +71,7 @@ export async function main(ns) {
         let batchRAMCost = ratios.hackThreads * memHacker + ratios.growThreads * memGrower + ratios.weakenThreads * memWeakener;
         let workerServer = findOpenServer(ns, serverList, batchRAMCost);
 
-        if (workerServer) {    disableLog(ns.sleep);
-                ns.tprintf("Starting job batch on " + workerServer + ".")
+        if (workerServer) {
                 let growStartAt = currTime + cycleTime - growTime;
                 ns.exec(scripts.grower, workerServer, ratios.growThreads, target, growStartAt)
                 let hackStartAt = currTime + cycleTime - hackTime + jobOffset;
@@ -88,10 +88,12 @@ export async function main(ns) {
 async function prepServer(ns, target) {
     // Prepare the target server
     while (true) {
-        if (ns.getServerSecurityLevel(hostname) > ns.getServerMinSecurityLevel(hostname)) {
-            await ns.weaken(hostname);
-        } else if (ns.getServerMoneyAvailable(hostname) < ns.getServerMaxMoney(hostname)) {
-            await ns.grow(hostname);
+        if (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)) {
+            ns.exec(scripts.weakener, ns.getHostname(), availableThreads(ns, ns.getHostname(), scripts.weakener), target, 0)
+            await ns.sleep(ns.getWeakenTime(target)*1.01);
+        } else if (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
+            ns.exec(scripts.grower, ns.getHostname(), availableThreads(ns, ns.getHostname(), scripts.grower), target, 0)
+            await ns.sleep(ns.getGrowTime(target)*1.01);
         } else {
             return;
         }

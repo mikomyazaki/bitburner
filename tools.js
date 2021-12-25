@@ -48,7 +48,6 @@ export function getAllServers(ns) {
     let serverList = ["home"];
     for (let i = 0; i < serverList.length; i++) {
         let scanList = ns.scan(serverList[i]);
-        ns.tprintf("Scanlist has " scanList.length + " population")
         for (let newServer of scanList) {
             if (!serverList.includes(newServer)) {
                 serverList.push(newServer);
