@@ -43,23 +43,24 @@ export async function main(ns) {
 
     await prepServer(ns, serverList, target);
     
-    const ratios = calculateThreadRatios(ns, target); // ratio of HGW threads
+    const sizeMultiplier = 1;
+    const ratios = calculateThreadRatios(ns, sizeMultiplier, target); // ratio of HGW threads
     const cycleTime = Math.max(ns.getWeakenTime(target), ns.getGrowTime(target), ns.getHackTime(target));  // time for one cycle to complete
     const growTime = ns.getGrowTime(target);
     const hackTime = ns.getHackTime(target);
     const weakenTime = ns.getWeakenTime(target);
-    const minCycleSeparation = 100; // minimum time between batches
+    const minCycleSeparation = 200; // minimum time between batches
     const memHacker = ns.getScriptRam(scripts.hacker);
     const memGrower = ns.getScriptRam(scripts.grower);
     const memWeakener = ns.getScriptRam(scripts.weakener);
-    const jobOffset = 5; // offset between individual hack/grow/weakens within a batch
+    const jobOffset = 2; // offset between individual hack/grow/weakens within a batch
     let currTime = Date.now()
 
-    let maxBatches = 3 * cycleTime / minCycleSeparation;
-    ns.tprint("Running hack script -- Max concurrent jobs - " + maxBatches);
+    let maxCycles = Math.floor(cycleTime / minCycleSeparation);
+    ns.tprint("Running hack script -- Max concurrent jobs - " + maxCycles);
     
     while (true) {
-        await ns.sleep(Math.max(Date.now() - currTime + minCycleSeparation, 0));
+        await ns.sleep(Math.max(currTime - Date.now() + minCycleSeparation, 0));
         serverList = await refreshServerList(ns);
 
         currTime = Date.now();
@@ -88,6 +89,7 @@ export async function main(ns) {
 async function prepServer(ns, serverList, target) {
     // Prepare the target server
     while (true) {
+        let growthThreads = 0;
         for (let server of serverList) {
             let workerServer = server.hostname;
             if (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)) {
@@ -97,8 +99,13 @@ async function prepServer(ns, serverList, target) {
                 }
             } else if (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
                 let threads = availableThreads(ns, workerServer, scripts.grower);
+                growthThreads = growthThreads || ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getMoneyAvailable(target), 1) - threads;
+    
                 if (threads) {
                     ns.exec(scripts.grower, workerServer, threads, target, 0)
+                }
+                if (growthThreads <= 0) {
+                    return;
                 }
             } else {
                 return;
@@ -110,7 +117,7 @@ async function prepServer(ns, serverList, target) {
     }
 }
 
-function calculateThreadRatios(ns, target) {
+function calculateThreadRatios(ns, sizeMultiplier, target) {
     const weakenSecDelta = -0.05;
     const growSecDelta = 0.004;
     const hackSecDelta = 0.002;
@@ -122,7 +129,7 @@ function calculateThreadRatios(ns, target) {
     // weaken-grow ratio
     let weakenPerHack = Math.ceil(1 / Math.abs((hackSecDelta + growPerHack * growSecDelta) / weakenSecDelta));
 
-    return new ratio(growPerHack, 1, weakenPerHack);
+    return new ratio(sizeMultiplier*growPerHack, sizeMultiplier, sizeMultiplier*weakenPerHack);
 }
 
 function findOpenServer(ns, serverList, batchRAMCost) {
