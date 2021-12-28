@@ -49,37 +49,40 @@ export async function main(ns) {
     const growTime = ns.getGrowTime(target);
     const hackTime = ns.getHackTime(target);
     const weakenTime = ns.getWeakenTime(target);
-    const minCycleSeparation = 200; // minimum time between batches
+    const minCycleSeparation = 500; // minimum time between batches
     const memHacker = ns.getScriptRam(scripts.hacker);
     const memGrower = ns.getScriptRam(scripts.grower);
     const memWeakener = ns.getScriptRam(scripts.weakener);
-    const jobOffset = 2; // offset between individual hack/grow/weakens within a batch
-    let currTime = Date.now()
+    const jobOffset = 5; // offset between individual hack/grow/weakens within a batch
+    let lastBatchTime = -Infinity;
 
     let maxCycles = Math.floor(cycleTime / minCycleSeparation);
     ns.tprint("Running hack script -- Max concurrent jobs - " + maxCycles);
+    ns.tprint("Cycle time is: " + Math.floor(cycleTime / 1e3) + " s.");
+    ns.tprint("Cycle separation is: " + minCycleSeparation + " ms.");
+    ns.tprint(`First cycle hits in ${Math.floor(ns.getWeakenTime(target) / 1e3) / 60} mins.`)
     
     while (true) {
-        await ns.sleep(Math.max(currTime - Date.now() + minCycleSeparation, 0));
+        await ns.sleep(Math.max(Date.now() - lastBatchTime + minCycleSeparation, 0));
         serverList = await refreshServerList(ns);
 
-        currTime = Date.now();
+        lastBatchTime = Date.now();
         let batchRAMCost = ratios.hackThreads * memHacker + ratios.growThreads * memGrower + ratios.weakenThreads * memWeakener;
         let workerServer = findOpenServer(ns, serverList, ratios.growThreads * memGrower);
 
         if (workerServer) {
-            let growStartAt = currTime + cycleTime - growTime;
-            ns.exec(scripts.grower, workerServer, ratios.growThreads, target, growStartAt)
+            let growStartAt = cycleTime - growTime;
+            ns.exec(scripts.grower, workerServer, ratios.growThreads, target, growStartAt, Date.now());
         }
         workerServer = findOpenServer(ns, serverList, ratios.hackThreads * memHacker);
         if (workerServer) {
-            let hackStartAt = currTime + cycleTime - hackTime + jobOffset;
-            ns.exec(scripts.hacker, workerServer, ratios.hackThreads, target, hackStartAt)
+            let hackStartAt = cycleTime - hackTime + jobOffset;
+            ns.exec(scripts.hacker, workerServer, ratios.hackThreads, target, hackStartAt, Date.now());
         }
         workerServer = findOpenServer(ns, serverList, batchRAMCost);
         if (workerServer) {
-            let weakenStartAt = currTime + cycleTime - weakenTime + 2*jobOffset;
-            ns.exec(scripts.weakener, workerServer, ratios.weakenThreads, target, weakenStartAt)
+            let weakenStartAt = cycleTime - weakenTime + 2*jobOffset;
+            ns.exec(scripts.weakener, workerServer, ratios.weakenThreads, target, weakenStartAt, Date.now());
         }
 
     }
@@ -89,7 +92,6 @@ export async function main(ns) {
 async function prepServer(ns, serverList, target) {
     // Prepare the target server
     while (true) {
-        let growthThreads = 0;
         for (let server of serverList) {
             let workerServer = server.hostname;
             if (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target)) {
@@ -99,13 +101,9 @@ async function prepServer(ns, serverList, target) {
                 }
             } else if (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target)) {
                 let threads = availableThreads(ns, workerServer, scripts.grower);
-                growthThreads = growthThreads || ns.growthAnalyze(target, ns.getServerMaxMoney(target) / ns.getMoneyAvailable(target), 1) - threads;
     
                 if (threads) {
                     ns.exec(scripts.grower, workerServer, threads, target, 0)
-                }
-                if (growthThreads <= 0) {
-                    return;
                 }
             } else {
                 return;
